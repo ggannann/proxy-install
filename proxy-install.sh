@@ -873,6 +873,7 @@ server {
     listen 127.0.0.1:31302 http2;
     server_name ${domain};
     root /usr/share/nginx/html;
+
     location /s/ {
         add_header Content-Type text/plain;
         alias /etc/proxy/subscribe/;
@@ -1848,7 +1849,7 @@ EOF
 
   # VLESS_WS_TLS
   if echo "${selectCustomInstallType}" | grep -q 1 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'ws","dest":31297,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_ws","dest":31297,"xver":1}'
     cat <<EOF >/etc/proxy/v2ray/conf/03_VLESS_WS_inbounds.json
 {
   "inbounds":[
@@ -1862,7 +1863,7 @@ EOF
         "clients": [
           {
             "id": "${uuid}",
-            "email": "${domain}_VLESS_WS"
+            "email": "${domain}_vless_ws"
           }
         ],
         "decryption": "none"
@@ -1873,7 +1874,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}ws"
+          "path": "/${customPath}_ws"
         }
       }
     }
@@ -1884,7 +1885,7 @@ EOF
 
   # VMess_WS
   if echo "${selectCustomInstallType}" | grep -q 3 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'vws","dest":31299,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_vws","dest":31299,"xver":1}'
     cat <<EOF >/etc/proxy/v2ray/conf/05_VMess_WS_inbounds.json
 {
   "inbounds":[
@@ -1910,7 +1911,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}vws"
+          "path": "/${customPath}_vws"
         }
       }
     }
@@ -1935,7 +1936,7 @@ EOF
           {
             "id": "${uuid}",
             "add": "${add}",
-            "email": "${domain}_VLESS_gRPC"
+            "email": "${domain}_vless_grpc"
           }
         ],
         "decryption": "none"
@@ -1944,7 +1945,7 @@ EOF
       "streamSettings": {
         "network": "grpc",
         "grpcSettings": {
-          "serviceName": "${customPath}grpc"
+          "serviceName": "${customPath}_grpc"
         }
       }
     }
@@ -1968,7 +1969,7 @@ EOF
           {
             "id": "${uuid}",
             "add": "${add}",
-            "email": "${domain}_VLESS_TLS_TCP"
+            "email": "${domain}_vless_tls_tcp"
           }
         ],
         "decryption": "none",
@@ -2012,7 +2013,7 @@ EOF
             "id": "${uuid}",
             "add":"${add}",
             "flow":"xtls-rprx-direct",
-            "email": "${domain}_VLESS_XTLS/TLS-direct_TCP"
+            "email": "${domain}_vless_xtls/tls-direct_tcp"
           }
         ],
         "decryption": "none",
@@ -2247,7 +2248,7 @@ EOF
 
   # VLESS_WS_TLS
   if echo "${selectCustomInstallType}" | grep -q 1 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'ws","dest":31297,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_ws","dest":31297,"xver":1}'
     cat <<EOF >/etc/proxy/xray/conf/03_VLESS_WS_inbounds.json
 {
   "inbounds":[
@@ -2261,7 +2262,7 @@ EOF
         "clients": [
           {
             "id": "${uuid}",
-            "email": "${domain}_VLESS_WS"
+            "email": "${domain}_vless_ws"
           }
         ],
         "decryption": "none"
@@ -2272,7 +2273,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}ws"
+          "path": "/${customPath}_ws"
         }
       }
     }
@@ -2300,7 +2301,7 @@ EOF
         "clients": [
           {
             "password": "${uuid}",
-            "email": "${domain}_trojan_gRPC"
+            "email": "${domain}_trojan_grpc"
           }
         ],
         "fallbacks": [
@@ -2313,7 +2314,7 @@ EOF
       "streamSettings": {
         "network": "grpc",
         "grpcSettings": {
-          "serviceName": "${customPath}trojangrpc"
+          "serviceName": "${customPath}_trojangrpc"
         }
       }
     }
@@ -2324,7 +2325,7 @@ EOF
 
   # VMess_WS
   if echo "${selectCustomInstallType}" | grep -q 3 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'vws","dest":31299,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_vws","dest":31299,"xver":1}'
     cat <<EOF >/etc/proxy/xray/conf/05_VMess_WS_inbounds.json
 {
   "inbounds":[
@@ -2350,7 +2351,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}vws"
+          "path": "/${customPath}_vws"
         }
       }
     }
@@ -2374,7 +2375,7 @@ EOF
           {
             "id": "${uuid}",
             "add": "${add}",
-            "email": "${domain}_VLESS_gRPC"
+            "email": "${domain}_vless_grpc"
           }
         ],
         "decryption": "none"
@@ -2383,7 +2384,7 @@ EOF
       "streamSettings": {
         "network": "grpc",
         "grpcSettings": {
-          "serviceName": "${customPath}grpc"
+          "serviceName": "${customPath}_grpc"
         }
       }
     }
@@ -2407,7 +2408,7 @@ EOF
             "id": "${uuid}",
             "add":"${add}",
             "flow":"xtls-rprx-direct",
-            "email": "${domain}_VLESS_XTLS/TLS-direct_TCP"
+            "email": "${domain}_vless_xtls/tls-direct_tcp"
           }
         ],
         "decryption": "none",
@@ -2471,7 +2472,7 @@ initTrojanGoConfig() {
 
   "websocket": {
     "enabled": true,
-    "path": "/${customPath}tws",
+    "path": "/${customPath}_tws",
     "host": "${domain}",
     "add":"${add}"
   },
@@ -2810,7 +2811,8 @@ showAccounts() {
 updateNginxBlog() {
   echoContent skyBlue "\n进度 $1/${totalProgress} : 更换伪装站点"
   echoContent red "=============================================================="
-  echoContent yellow "# 如需自定义，请手动复制模版文件到 /usr/share/nginx/html \n"
+  echoContent yellow "# 如需自定义，请手动复制模版文件到 /usr/share/nginx/html"
+  echoContent red "=============================================================="
   echoContent yellow "1.新手引导"
   echoContent yellow "2.游戏网站"
   echoContent yellow "3.个人博客01"
@@ -2824,7 +2826,7 @@ updateNginxBlog() {
   echoContent red "=============================================================="
   read -r -p "请选择:" selectInstallNginxBlogType
 
-  if [[ "${selectInstallNginxBlogType}" =~ ^[1-10]$ ]]; then
+  if [[ "${selectInstallNginxBlogType}" =~ ^[1-10]+$ ]]; then
     # rm -rf /usr/share/nginx/html
     rm -rf /usr/share/nginx/*
     if wget --help | grep -q show-progress; then
