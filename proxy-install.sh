@@ -1101,32 +1101,23 @@ nginxBlog() {
     if [[ "${nginxBlogInstallStatus}" == "y" ]]; then
       rm -rf /usr/share/nginx/html
 
-      # randomNum=$((RANDOM % 6 + 1))
-      # wget -q -P /usr/share/nginx https://raw.githubusercontent.com/mack-a/v2ray-agent/master/fodder/blog/unable/html${randomNum}.zip >/dev/null
-      # unzip -o /usr/share/nginx/html${randomNum}.zip -d /usr/share/nginx/html >/dev/null
-      # rm -f /usr/share/nginx/html${randomNum}.zip*
-
-      wget -q -P /usr/share/nginx https://raw.githubusercontent.com/mack-a/v2ray-agent/master/fodder/blog/unable/html2.zip >/dev/null
-      unzip -o /usr/share/nginx/html2.zip -d /usr/share/nginx/html >/dev/null
-      rm -f /usr/share/nginx/html2.zip*
+      randomNum=$((RANDOM % 6 + 1))
+      wget -q -P /usr/share/nginx https://raw.githubusercontent.com/ggannann/proxy-install/main/web/html${randomNum}.zip >/dev/null
+      unzip -o /usr/share/nginx/html${randomNum}.zip -d /usr/share/nginx/html >/dev/null
+      rm -f /usr/share/nginx/html${randomNum}.zip*
 
       echoContent green " ---> 添加伪装站点成功"
     fi
   else
     rm -rf /usr/share/nginx/html
 
-    # randomNum=$((RANDOM % 6 + 1))
-    # wget -q -P /usr/share/nginx https://raw.githubusercontent.com/mack-a/v2ray-agent/master/fodder/blog/unable/html${randomNum}.zip >/dev/null
-    # unzip -o /usr/share/nginx/html${randomNum}.zip -d /usr/share/nginx/html >/dev/null
-    # rm -f /usr/share/nginx/html${randomNum}.zip*
-
-    wget -q -P /usr/share/nginx https://raw.githubusercontent.com/mack-a/v2ray-agent/master/fodder/blog/unable/html2.zip >/dev/null
-    unzip -o /usr/share/nginx/html2.zip -d /usr/share/nginx/html >/dev/null
-    rm -f /usr/share/nginx/html2.zip*
+    randomNum=$((RANDOM % 6 + 1))
+    wget -q -P /usr/share/nginx https://raw.githubusercontent.com/ggannann/proxy-install/main/web/html${randomNum}.zip >/dev/null
+    unzip -o /usr/share/nginx/html${randomNum}.zip -d /usr/share/nginx/html >/dev/null
+    rm -f /usr/share/nginx/html${randomNum}.zip*
 
     echoContent green " ---> 添加伪装站点成功"
   fi
-
 }
 
 # 操作Nginx
@@ -2498,7 +2489,7 @@ customCDNIP() {
   echoContent red "\n=============================================================="
   echoContent yellow "# 注意事项"
   echoContent yellow "\n教程地址:"
-  echoContent skyBlue "https://github.com/mack-a/v2ray-agent/blob/master/documents/optimize_V2Ray.md"
+  echoContent skyBlue "https://github.com/ggannann/proxy-install/blob/main/documents/optimize_V2Ray.md"
   echoContent red "\n如对Cloudflare优化不了解，请不要使用"
   echoContent yellow "\n 1.移动:104.16.123.96"
   echoContent yellow " 2.联通:www.cloudflare.com"
@@ -2829,16 +2820,17 @@ updateNginxBlog() {
   echoContent yellow "7.企业站02"
   echoContent yellow "8.个人博客02"
   echoContent yellow "9.404自动跳转baidu"
+  echoContent yellow "10.WebGL Fluid Simulation"
   echoContent red "=============================================================="
   read -r -p "请选择:" selectInstallNginxBlogType
 
-  if [[ "${selectInstallNginxBlogType}" =~ ^[1-9]$ ]]; then
+  if [[ "${selectInstallNginxBlogType}" =~ ^[1-10]$ ]]; then
     # rm -rf /usr/share/nginx/html
     rm -rf /usr/share/nginx/*
     if wget --help | grep -q show-progress; then
-      wget -c -q --show-progress -P /usr/share/nginx "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/fodder/blog/unable/html${selectInstallNginxBlogType}.zip" >/dev/null
+      wget -c -q --show-progress -P /usr/share/nginx "https://raw.githubusercontent.com/ggannann/proxy-install/main/web/html${selectInstallNginxBlogType}.zip" >/dev/null
     else
-      wget -c -P /usr/share/nginx "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/fodder/blog/unable/html${selectInstallNginxBlogType}.zip" >/dev/null
+      wget -c -P /usr/share/nginx "https://raw.githubusercontent.com/ggannann/proxy-install/main/web/html${selectInstallNginxBlogType}.zip" >/dev/null
     fi
 
     unzip -o "/usr/share/nginx/html${selectInstallNginxBlogType}.zip" -d /usr/share/nginx/html >/dev/null
@@ -3225,9 +3217,9 @@ updateV2RayAgent() {
   echoContent skyBlue "\n进度  $1/${totalProgress} : 更新proxy脚本"
   rm -rf /etc/proxy/install.sh
   if wget --help | grep -q show-progress; then
-    wget -c -q --show-progress -P /etc/proxy/ -N --no-check-certificate "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh"
+    wget -c -q --show-progress -O /etc/proxy/install.sh -N --no-check-certificate "https://raw.githubusercontent.com/ggannann/proxy-install/main/proxy-install.sh"
   else
-    wget -c -q -P /etc/proxy/ -N --no-check-certificate "https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh"
+    wget -c -q -O /etc/proxy/install.sh -N --no-check-certificate "https://raw.githubusercontent.com/ggannann/proxy-install/main/proxy-install.sh"
   fi
 
   sudo chmod 700 /etc/proxy/install.sh
@@ -3238,7 +3230,7 @@ updateV2RayAgent() {
   echoContent yellow " ---> 请手动执行[proxy]打开脚本"
   echoContent green " ---> 当前版本:${version}\n"
   echoContent yellow "如更新不成功，请手动执行下面命令\n"
-  echoContent skyBlue "wget -P /root -N --no-check-certificate https://raw.githubusercontent.com/mack-a/v2ray-agent/master/install.sh && chmod 700 /root/install.sh && /root/install.sh"
+  echoContent skyBlue "wget -P /root/scripts -N --no-check-certificate https://raw.githubusercontent.com/ggannann/proxy-install/main/proxy-install.sh && chmod 700 /root/scripts/proxy-install.sh && /root/scripts/proxy-install.sh"
   echo
   exit 0
 }
@@ -3351,7 +3343,7 @@ EOF
 # 脚本快捷方式
 aliasInstall() {
 
-  if [[ -f "$HOME/scripts/proxy-install.sh" ]] && [[ -d "/etc/proxy" ]] && grep <"$HOME/scripts/proxy-install.sh" -q "作者：mack-a"; then
+  if [[ -f "$HOME/scripts/proxy-install.sh" ]] && [[ -d "/etc/proxy" ]] && grep <"$HOME/scripts/proxy-install.sh" -q "作者：Gan Nan"; then
     mv "$HOME/scripts/proxy-install.sh" /etc/proxy/install.sh
     local proxyType=
     if [[ -d "/usr/bin/" ]]; then
@@ -3703,7 +3695,7 @@ dokodemoDoorUnblockNetflix() {
   echoContent skyBlue "\n功能 1/${totalProgress} : 任意门落地机解锁Netflix"
   echoContent red "\n=============================================================="
   echoContent yellow "# 注意事项"
-  echoContent yellow "任意门解锁详解，请查看此文章[https://github.com/mack-a/v2ray-agent/blob/master/documents/netflix/dokodemo-unblock_netflix.md]\n"
+  echoContent yellow "任意门解锁详解，请查看此文章[https://github.com/ggannann/proxy-install/blob/main/documents/netflix/dokodemo-unblock_netflix.md]\n"
 
   echoContent yellow "1.添加出站"
   echoContent yellow "2.添加入站"
@@ -4368,14 +4360,13 @@ switchAlpn() {
   fi
   reloadCore
 }
+
 # 主菜单
 menu() {
   cd "$HOME" || exit
   echoContent red "\n=============================================================="
-  echoContent green "作者：mack-a"
-  echoContent green "当前版本：v2.5.39"
-  echoContent green "Github：https://github.com/mack-a/v2ray-agent"
-  echoContent green "描述：八合一共存脚本\c"
+  echoContent green "作者：Gan Nan"
+  echoContent green "当前版本：v1.0"
   showInstallStatus
   echoContent red "\n=============================================================="
   if [[ -n "${coreInstallType}" ]]; then
