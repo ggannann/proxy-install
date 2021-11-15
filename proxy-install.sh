@@ -4,92 +4,6 @@
 # 检查系统
 export LANG=en_US.UTF-8
 
-# 初始化全局变量
-initVar() {
-  installType='yum -y install'
-  removeType='yum -y remove'
-  upgrade="yum -y update"
-  echoType='echo -e'
-
-  # 核心支持的cpu版本
-  xrayCoreCPUVendor=""
-  v2rayCoreCPUVendor=""
-  trojanGoCPUVendor=""
-
-  # 域名
-  domain=
-
-  # CDN节点的address
-  add=
-
-  # 安装总进度
-  totalProgress=1
-
-  # 1.xray-core安装
-  # 2.v2ray-core 安装
-  # 3.v2ray-core[xtls] 安装
-  coreInstallType=
-
-  # 核心安装path
-  # coreInstallPath=
-
-  # v2ctl Path
-  ctlPath=
-  # 1.全部安装
-  # 2.个性化安装
-  # v2rayAgentInstallType=
-
-  # 当前的个性化安装方式 0134
-  currentInstallProtocolType=0134
-
-  # 当前alpn的顺序
-  currentAlpn=
-
-  # 前置类型
-  frontingType=
-
-  # 选择的个性化安装方式
-  selectCustomInstallType=
-
-  # v2ray-core、xray-core配置文件的路径
-  configPath=
-
-  # 配置文件的path
-  currentPath=
-
-  # 配置文件的host
-  currentHost=
-
-  # 安装时选择的core类型
-  selectCoreType=
-
-  # 默认core版本
-  v2rayCoreVersion=
-
-  # 随机路径
-  customPath=
-
-  # centos version
-  centosVersion=
-
-  # UUID
-  currentUUID=
-
-  localIP=
-
-  # 集成更新证书逻辑不再使用单独的脚本--RenewTLS
-  renewTLS=$1
-
-  # tls安装失败后尝试的次数
-  installTLSCount=
-
-  # BTPanel状态
-  BTPanelStatus=
-
-  # nginx配置文件路径
-  nginxConfigPath=/etc/nginx/conf.d
-}
-
 echoContent() {
   case $1 in
   # 红色
@@ -191,6 +105,92 @@ checkCPUVendor() {
   fi
 }
 
+# 初始化全局变量
+initVar() {
+  installType='yum -y install'
+  removeType='yum -y remove'
+  upgrade="yum -y update"
+  echoType='echo -e'
+
+  # 核心支持的cpu版本
+  xrayCoreCPUVendor=""
+  v2rayCoreCPUVendor=""
+  trojanGoCPUVendor=""
+
+  # 域名
+  domain=
+
+  # CDN节点的address
+  add=
+
+  # 安装总进度
+  totalProgress=1
+
+  # 1.xray-core安装
+  # 2.v2ray-core 安装
+  # 3.v2ray-core[xtls] 安装
+  coreInstallType=
+
+  # 核心安装path
+  # coreInstallPath=
+
+  # v2ctl Path
+  ctlPath=
+  # 1.全部安装
+  # 2.个性化安装
+  # v2rayAgentInstallType=
+
+  # 当前的个性化安装方式 0134
+  currentInstallProtocolType=0134
+
+  # 当前alpn的顺序
+  currentAlpn=
+
+  # 前置类型
+  frontingType=
+
+  # 选择的个性化安装方式
+  selectCustomInstallType=
+
+  # v2ray-core、xray-core配置文件的路径
+  configPath=
+
+  # 配置文件的path
+  currentPath=
+
+  # 配置文件的host
+  currentHost=
+
+  # 安装时选择的core类型
+  selectCoreType=
+
+  # 默认core版本
+  v2rayCoreVersion=
+
+  # 随机路径
+  customPath=
+
+  # centos version
+  centosVersion=
+
+  # UUID
+  currentUUID=
+
+  localIP=
+
+  # 集成更新证书逻辑不再使用单独的脚本--RenewTLS
+  renewTLS=$1
+
+  # tls安装失败后尝试的次数
+  installTLSCount=
+
+  # BTPanel状态
+  BTPanelStatus=
+
+  # nginx配置文件路径
+  nginxConfigPath=/etc/nginx/conf.d
+}
+
 # 检测安装方式
 readInstallType() {
   coreInstallType=
@@ -255,7 +255,7 @@ readInstallProtocolType() {
     if echo "${row}" | grep -q vless_grpc_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'5'
     fi
-  done < <(find ${configPath}/ -name "*inbounds.json" | awk -F "[.]" '{print $1}')
+  done < <(find ${configPath} -name "*inbounds.json" | awk -F "[.]" '{print $1}')
 }
 
 # 检查是否安装宝塔
@@ -778,7 +778,7 @@ server {
     }
 
     location /test {
-        return 200 'aaa';
+        return 200 'fjkvymb6len';
     }
 
     location /ip {
@@ -840,7 +840,7 @@ server {
         alias /etc/proxy/subscribe/;
     }
 
-    location /${currentPath}_grpc {
+    location /${currentPath}grpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -852,7 +852,7 @@ server {
         grpc_pass grpc://127.0.0.1:31301;
     }
 
-    location /${currentPath}_trojangrpc {
+    location /${currentPath}trojangrpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -877,7 +877,7 @@ server {
         alias /etc/proxy/subscribe/;
     }
 
-    location /${currentPath}_grpc {
+    location /${currentPath}grpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -904,7 +904,7 @@ server {
         alias /etc/proxy/subscribe/;
     }
 
-    location /${currentPath}_trojangrpc {
+    location /${currentPath}trojangrpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -1055,7 +1055,7 @@ server {
     }
 
     location /test {
-        return 200 'aaa';
+        return 200 'fjkvymb6len';
     }
 }
 EOF
@@ -1753,7 +1753,7 @@ EOF
 
   # outbounds
   if [[ -n "${pingIPv6}" ]]; then
-    cat <<EOF >/etc/proxy/v2ray/conf/10_ipv6_outbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/ipv6_outbounds.json
 {
   "outbounds": [
     {
@@ -1845,7 +1845,7 @@ EOF
 
   # VLESS_WS_TLS
   if echo "${selectCustomInstallType}" | grep -q 1 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_ws","dest":31297,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'ws","dest":31297,"xver":1}'
     cat <<EOF >/etc/proxy/v2ray/conf/vless_ws_inbounds.json
 {
   "inbounds":[
@@ -1881,7 +1881,7 @@ EOF
 
   # VMess_WS
   if echo "${selectCustomInstallType}" | grep -q 3 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_vws","dest":31299,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'vws","dest":31299,"xver":1}'
     cat <<EOF >/etc/proxy/v2ray/conf/vmess_ws_inbounds.json
 {
   "inbounds":[
@@ -1907,7 +1907,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}_vws"
+          "path": "/${customPath}vws"
         }
       }
     }
@@ -1941,7 +1941,7 @@ EOF
       "streamSettings": {
         "network": "grpc",
         "grpcSettings": {
-          "serviceName": "${customPath}_grpc"
+          "serviceName": "${customPath}grpc"
         }
       }
     }
@@ -2042,7 +2042,7 @@ EOF
 
 # 初始化Xray Trojan XTLS 配置文件
 initXrayFrontingConfig() {
-  if [[ -z "${configPath}/" ]]; then
+  if [[ -z "${configPath}" ]]; then
     echoContent red " ---> 未安装，请使用脚本安装"
     menu
     exit 0
@@ -2149,7 +2149,7 @@ EOF
 
   # outbounds
   if [[ -n "${pingIPv6}" ]]; then
-    cat <<EOF >/etc/proxy/xray/conf/10_ipv6_outbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/ipv6_outbounds.json
 {
   "outbounds": [
     {
@@ -2244,7 +2244,7 @@ EOF
 
   # VLESS_WS_TLS
   if echo "${selectCustomInstallType}" | grep -q 1 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_ws","dest":31297,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'ws","dest":31297,"xver":1}'
     cat <<EOF >/etc/proxy/xray/conf/vless_ws_inbounds.json
 {
   "inbounds":[
@@ -2269,7 +2269,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}_ws"
+          "path": "/${customPath}ws"
         }
       }
     }
@@ -2310,7 +2310,7 @@ EOF
       "streamSettings": {
         "network": "grpc",
         "grpcSettings": {
-          "serviceName": "${customPath}_trojangrpc"
+          "serviceName": "${customPath}trojangrpc"
         }
       }
     }
@@ -2321,7 +2321,7 @@ EOF
 
   # VMess_WS
   if echo "${selectCustomInstallType}" | grep -q 3 || [[ "$1" == "all" ]]; then
-    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_vws","dest":31299,"xver":1}'
+    fallbacksList=${fallbacksList}',{"path":"/'${customPath}'vws","dest":31299,"xver":1}'
     cat <<EOF >/etc/proxy/xray/conf/vmess_ws_inbounds.json
 {
   "inbounds":[
@@ -2347,7 +2347,7 @@ EOF
         "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
-          "path": "/${customPath}_vws"
+          "path": "/${customPath}vws"
         }
       }
     }
@@ -2380,7 +2380,7 @@ EOF
       "streamSettings": {
         "network": "grpc",
         "grpcSettings": {
-          "serviceName": "${customPath}_grpc"
+          "serviceName": "${customPath}grpc"
         }
       }
     }
@@ -2467,7 +2467,7 @@ initTrojanGoConfig() {
 
   "websocket": {
     "enabled": true,
-    "path": "/${customPath}_tws",
+    "path": "/${customPath}tws",
     "host": "${domain}",
     "add":"${add}"
   },
@@ -2738,10 +2738,10 @@ showAccounts() {
       jq .inbounds[0].settings.clients ${configPath}/vless_ws_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .id)"
         echo
-        local path="${currentPath}_ws"
+        local path="${currentPath}ws"
         if [[ ${coreInstallType} == "1" ]]; then
           echoContent yellow "Xray的0-RTT path后面会有?ed=2048，不兼容以v2ray为核心的客户端，请手动删除?ed=2048后使用\n"
-          path="${currentPath}_ws?ed=2048"
+          path="${currentPath}ws?ed=2048"
         fi
         defaultBase64Code vlessws "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .id)" "${currentHost}:${currentPort}" "${path}" "${currentAdd}"
       done
@@ -2750,9 +2750,9 @@ showAccounts() {
     # VMess WS
     if echo ${currentInstallProtocolType} | grep -q 3; then
       echoContent skyBlue "\n================================ VMess WS TLS CDN ================================\n"
-      local path="${currentPath}_vws"
+      local path="${currentPath}vws"
       if [[ ${coreInstallType} == "1" ]]; then
-        path="${currentPath}_vws?ed=2048"
+        path="${currentPath}vws?ed=2048"
       fi
       jq .inbounds[0].settings.clients ${configPath}/vmess_ws_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .id)"
@@ -2879,12 +2879,12 @@ EOF
     fi
   elif [[ "${selectNewPortType}" == "2" ]]; then
 
-    find ${configPath}/ -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}'
+    find ${configPath} -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}'
     read -r -p "请输入要删除的端口编号：" portIndex
     local dokoConfig
-    dokoConfig=$(find ${configPath}/ -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}' | grep "${portIndex}:")
+    dokoConfig=$(find ${configPath} -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}' | grep "${portIndex}:")
     if [[ -n "${dokoConfig}" ]]; then
-      rm "${configPath}//$(echo "${dokoConfig}" | awk -F "[:]" '{print $2}')"
+      rm "${configPath}/$(echo "${dokoConfig}" | awk -F "[:]" '{print $2}')"
       reloadCore
     else
       echoContent yellow "\n ---> 编号输入错误，请重新选择"
@@ -3257,7 +3257,7 @@ bbrInstall() {
 
 # 查看、检查日志
 checkLog() {
-  if [[ -z ${configPath}/ ]]; then
+  if [[ -z ${configPath} ]]; then
     echoContent red " ---> 没有检测到安装目录，请执行脚本安装内容"
   fi
   local logStatus=false
@@ -3368,7 +3368,7 @@ checkIPv6() {
 
 # ipv6 分流
 ipv6Routing() {
-  if [[ -z "${configPath}/" ]]; then
+  if [[ -z "${configPath}" ]]; then
     echoContent red " ---> 未安装，请使用脚本安装"
     menu
     exit 0
@@ -3444,7 +3444,7 @@ EOF
 
 # bt下载管理
 btTools() {
-  if [[ -z "${configPath}/" ]]; then
+  if [[ -z "${configPath}" ]]; then
     echoContent red " ---> 未安装，请使用脚本安装"
     menu
     exit 0
@@ -3551,7 +3551,7 @@ unInstallOutbounds() {
 
 # 卸载嗅探
 unInstallSniffing() {
-  find ${configPath}/ -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
+  find ${configPath} -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
     sniffing=$(jq -r 'del(.inbounds[0].sniffing)' "${configPath}/${inbound}")
     echo "${sniffing}" | jq . >"${configPath}/${inbound}"
   done
@@ -3560,7 +3560,7 @@ unInstallSniffing() {
 # 安装嗅探
 installSniffing() {
 
-  find ${configPath}/ -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
+  find ${configPath} -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
     sniffing=$(jq -r '.inbounds[0].sniffing = {"enabled":true,"destOverride":["http","tls"]}' "${configPath}/${inbound}")
     echo "${sniffing}" | jq . >"${configPath}/${inbound}"
   done
