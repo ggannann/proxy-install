@@ -39,7 +39,7 @@ initVar() {
   # 2.个性化安装
   # v2rayAgentInstallType=
 
-  # 当前的个性化安装方式 01234
+  # 当前的个性化安装方式 0134
   currentInstallProtocolType=0134
 
   # 当前alpn的顺序
@@ -87,7 +87,7 @@ initVar() {
   BTPanelStatus=
 
   # nginx配置文件路径
-  nginxConfigPath=/etc/nginx/conf.d/
+  nginxConfigPath=/etc/nginx/conf.d
 }
 
 echoContent() {
@@ -200,14 +200,14 @@ readInstallType() {
   if [[ -d "/etc/proxy" ]]; then
     # 检测安装方式 v2ray-core
     if [[ -d "/etc/proxy/v2ray" && -f "/etc/proxy/v2ray/v2ray" && -f "/etc/proxy/v2ray/v2ctl" ]]; then
-      if [[ -d "/etc/proxy/v2ray/conf" && -f "/etc/proxy/v2ray/conf/02_VLESS_TCP_inbounds.json" ]]; then
-        configPath=/etc/proxy/v2ray/conf/
+      if [[ -d "/etc/proxy/v2ray/conf" && -f "/etc/proxy/v2ray/conf/vless_tcp_inbounds.json" ]]; then
+        configPath=/etc/proxy/v2ray/conf
 
-        if ! grep </etc/proxy/v2ray/conf/02_VLESS_TCP_inbounds.json -q xtls; then
+        if ! grep </etc/proxy/v2ray/conf/vless_tcp_inbounds.json -q xtls; then
           # 不带XTLS的v2ray-core
           coreInstallType=2
           ctlPath=/etc/proxy/v2ray/v2ctl
-        elif grep </etc/proxy/v2ray/conf/02_VLESS_TCP_inbounds.json -q xtls; then
+        elif grep </etc/proxy/v2ray/conf/vless_tcp_inbounds.json -q xtls; then
           # 带XTLS的v2ray-core
           ctlPath=/etc/proxy/v2ray/v2ctl
           coreInstallType=3
@@ -217,9 +217,9 @@ readInstallType() {
 
     if [[ -d "/etc/proxy/xray" && -f "/etc/proxy/xray/xray" ]]; then
       # 这里检测xray-core
-      if [[ -d "/etc/proxy/xray/conf" ]] && [[ -f "/etc/proxy/xray/conf/02_VLESS_TCP_inbounds.json" || -f "/etc/proxy/xray/conf/02_trojan_TCP_inbounds.json" ]]; then
+      if [[ -d "/etc/proxy/xray/conf" ]] && [[ -f "/etc/proxy/xray/conf/vless_tcp_inbounds.json" || -f "/etc/proxy/xray/conf/native_trojan_tcp_inbounds.json" ]]; then
         # xray-core
-        configPath=/etc/proxy/xray/conf/
+        configPath=/etc/proxy/xray/conf
         ctlPath=/etc/proxy/xray/xray
         coreInstallType=1
       fi
@@ -232,36 +232,36 @@ readInstallProtocolType() {
   currentInstallProtocolType=
 
   while read -r row; do
-    if echo "${row}" | grep -q 02_trojan_TCP_inbounds; then
+    if echo "${row}" | grep -q native_trojan_tcp_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'trojan'
-      frontingType=02_trojan_TCP_inbounds
+      frontingType=native_trojan_tcp_inbounds
     fi
-    if echo "${row}" | grep -q VLESS_TCP_inbounds; then
+    if echo "${row}" | grep -q vless_tcp_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'0'
-      frontingType=02_VLESS_TCP_inbounds
+      frontingType=vless_tcp_inbounds
     fi
-    if echo "${row}" | grep -q VLESS_WS_inbounds; then
+    if echo "${row}" | grep -q vless_ws_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'1'
     fi
-    if echo "${row}" | grep -q trojan_gRPC_inbounds; then
+    if echo "${row}" | grep -q trojan_grpc_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'2'
     fi
-    if echo "${row}" | grep -q VMess_WS_inbounds; then
+    if echo "${row}" | grep -q vmess_ws_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'3'
     fi
-    if echo "${row}" | grep -q 04_trojan_TCP_inbounds; then
+    if echo "${row}" | grep -q trojan_tcp_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'4'
     fi
-    if echo "${row}" | grep -q VLESS_gRPC_inbounds; then
+    if echo "${row}" | grep -q vless_grpc_inbounds; then
       currentInstallProtocolType=${currentInstallProtocolType}'5'
     fi
-  done < <(find ${configPath} -name "*inbounds.json" | awk -F "[.]" '{print $1}')
+  done < <(find ${configPath}/ -name "*inbounds.json" | awk -F "[.]" '{print $1}')
 }
 
 # 检查是否安装宝塔
 checkBTPanel() {
   if pgrep -f "BT-Panel"; then
-    nginxConfigPath=/www/server/panel/vhost/nginx/
+    nginxConfigPath=/www/server/panel/vhost/nginx
     BTPanelStatus=true
   fi
 }
@@ -270,7 +270,7 @@ checkBTPanel() {
 readInstallAlpn() {
   if [[ -n ${currentInstallProtocolType} ]]; then
     local alpn
-    alpn=$(jq -r .inbounds[0].streamSettings.xtlsSettings.alpn[0] ${configPath}${frontingType}.json)
+    alpn=$(jq -r .inbounds[0].streamSettings.xtlsSettings.alpn[0] ${configPath}/${frontingType}.json)
     if [[ -n ${alpn} ]]; then
       currentAlpn=${alpn}
     fi
@@ -369,7 +369,7 @@ readConfigHostPathUUID() {
   # 读取path
   if [[ -n "${configPath}" ]]; then
     local fallback
-    fallback=$(jq -r -c '.inbounds[0].settings.fallbacks[]|select(.path)' ${configPath}${frontingType}.json | head -1)
+    fallback=$(jq -r -c '.inbounds[0].settings.fallbacks[]|select(.path)' ${configPath}/${frontingType}.json | head -1)
 
     local path
     path=$(echo "${fallback}" | jq -r .path | awk -F "[/]" '{print $2}')
@@ -384,27 +384,27 @@ readConfigHostPathUUID() {
   fi
 
   if [[ "${coreInstallType}" == "1" ]]; then
-    currentHost=$(jq -r .inbounds[0].streamSettings.xtlsSettings.certificates[0].certificateFile ${configPath}${frontingType}.json | awk -F '[t][l][s][/]' '{print $2}' | awk -F '[.][c][r][t]' '{print $1}')
-    currentUUID=$(jq -r .inbounds[0].settings.clients[0].id ${configPath}${frontingType}.json)
-    currentAdd=$(jq -r .inbounds[0].settings.clients[0].add ${configPath}${frontingType}.json)
+    currentHost=$(jq -r .inbounds[0].streamSettings.xtlsSettings.certificates[0].certificateFile ${configPath}/${frontingType}.json | awk -F '[t][l][s][/]' '{print $2}' | awk -F '[.][c][r][t]' '{print $1}')
+    currentUUID=$(jq -r .inbounds[0].settings.clients[0].id ${configPath}/${frontingType}.json)
+    currentAdd=$(jq -r .inbounds[0].settings.clients[0].add ${configPath}/${frontingType}.json)
     if [[ "${currentAdd}" == "null" ]]; then
       currentAdd=${currentHost}
     fi
-    currentPort=$(jq .inbounds[0].port ${configPath}${frontingType}.json)
+    currentPort=$(jq .inbounds[0].port ${configPath}/${frontingType}.json)
 
   elif [[ "${coreInstallType}" == "2" || "${coreInstallType}" == "3" ]]; then
     if [[ "${coreInstallType}" == "3" ]]; then
-      currentHost=$(jq -r .inbounds[0].streamSettings.xtlsSettings.certificates[0].certificateFile ${configPath}${frontingType}.json | awk -F '[t][l][s][/]' '{print $2}' | awk -F '[.][c][r][t]' '{print $1}')
+      currentHost=$(jq -r .inbounds[0].streamSettings.xtlsSettings.certificates[0].certificateFile ${configPath}/${frontingType}.json | awk -F '[t][l][s][/]' '{print $2}' | awk -F '[.][c][r][t]' '{print $1}')
     else
-      currentHost=$(jq -r .inbounds[0].streamSettings.tlsSettings.certificates[0].certificateFile ${configPath}${frontingType}.json | awk -F '[t][l][s][/]' '{print $2}' | awk -F '[.][c][r][t]' '{print $1}')
+      currentHost=$(jq -r .inbounds[0].streamSettings.tlsSettings.certificates[0].certificateFile ${configPath}/${frontingType}.json | awk -F '[t][l][s][/]' '{print $2}' | awk -F '[.][c][r][t]' '{print $1}')
     fi
-    currentAdd=$(jq -r .inbounds[0].settings.clients[0].add ${configPath}${frontingType}.json)
+    currentAdd=$(jq -r .inbounds[0].settings.clients[0].add ${configPath}/${frontingType}.json)
 
     if [[ "${currentAdd}" == "null" ]]; then
       currentAdd=${currentHost}
     fi
-    currentUUID=$(jq -r .inbounds[0].settings.clients[0].id ${configPath}${frontingType}.json)
-    currentPort=$(jq .inbounds[0].port ${configPath}${frontingType}.json)
+    currentUUID=$(jq -r .inbounds[0].settings.clients[0].id ${configPath}/${frontingType}.json)
+    currentPort=$(jq .inbounds[0].port ${configPath}/${frontingType}.json)
   fi
 }
 
@@ -659,7 +659,6 @@ installTools() {
 
 # 安装Nginx
 installNginxTools() {
-
   if [[ "${release}" == "debian" ]]; then
     sudo apt install gnupg2 ca-certificates lsb-release -y >/dev/null 2>&1
     echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list >/dev/null 2>&1
@@ -766,8 +765,8 @@ initTLSNginxConfig() {
     initTLSNginxConfig
   else
     # 修改配置
-    touch ${nginxConfigPath}proxy.conf
-    cat <<EOF >${nginxConfigPath}proxy.conf
+    touch ${nginxConfigPath}/proxy.conf
+    cat <<EOF >${nginxConfigPath}/proxy.conf
 server {
     listen 80;
     listen [::]:80;
@@ -779,7 +778,7 @@ server {
     }
 
     location /test {
-        return 200 'fjkvymb6len';
+        return 200 'aaa';
     }
 
     location /ip {
@@ -800,10 +799,9 @@ EOF
 
 # 修改nginx重定向配置
 updateRedirectNginxConf() {
-
   if [[ ${BTPanelStatus} = "true" ]]; then
 
-    cat <<EOF >${nginxConfigPath}proxy.conf
+    cat <<EOF >${nginxConfigPath}/proxy.conf
 server {
     listen 127.0.0.1:31300;
     server_name _;
@@ -812,7 +810,7 @@ server {
 EOF
 
   else
-    cat <<EOF >${nginxConfigPath}proxy.conf
+    cat <<EOF >${nginxConfigPath}/proxy.conf
 server {
     listen 80;
     listen [::]:80;
@@ -831,7 +829,7 @@ EOF
 
   if echo "${selectCustomInstallType}" | grep -q 2 && echo "${selectCustomInstallType}" | grep -q 5 || [[ -z "${selectCustomInstallType}" ]]; then
 
-    cat <<EOF >>${nginxConfigPath}proxy.conf
+    cat <<EOF >>${nginxConfigPath}/proxy.conf
 server {
     listen 127.0.0.1:31302 http2;
     server_name ${domain};
@@ -842,7 +840,7 @@ server {
         alias /etc/proxy/subscribe/;
     }
 
-    location /${currentPath}grpc {
+    location /${currentPath}_grpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -854,7 +852,7 @@ server {
         grpc_pass grpc://127.0.0.1:31301;
     }
 
-    location /${currentPath}trojangrpc {
+    location /${currentPath}_trojangrpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -868,7 +866,7 @@ server {
 }
 EOF
   elif echo "${selectCustomInstallType}" | grep -q 5 || [[ -z "${selectCustomInstallType}" ]]; then
-    cat <<EOF >>${nginxConfigPath}proxy.conf
+    cat <<EOF >>${nginxConfigPath}/proxy.conf
 server {
     listen 127.0.0.1:31302 http2;
     server_name ${domain};
@@ -879,7 +877,7 @@ server {
         alias /etc/proxy/subscribe/;
     }
 
-    location /${currentPath}grpc {
+    location /${currentPath}_grpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -895,7 +893,7 @@ EOF
 
   elif echo "${selectCustomInstallType}" | grep -q 2 || [[ -z "${selectCustomInstallType}" ]]; then
 
-    cat <<EOF >>${nginxConfigPath}proxy.conf
+    cat <<EOF >>${nginxConfigPath}/proxy.conf
 server {
     listen 127.0.0.1:31302 http2;
     server_name ${domain};
@@ -906,7 +904,7 @@ server {
         alias /etc/proxy/subscribe/;
     }
 
-    location /${currentPath}trojangrpc {
+    location /${currentPath}_trojangrpc {
         client_max_body_size 0;
         # keepalive_time 1071906480m;
         keepalive_requests 4294967296;
@@ -921,7 +919,7 @@ server {
 EOF
   else
 
-    cat <<EOF >>${nginxConfigPath}proxy.conf
+    cat <<EOF >>${nginxConfigPath}/proxy.conf
 server {
     listen 127.0.0.1:31302 http2;
     server_name ${domain};
@@ -938,7 +936,7 @@ server {
 EOF
   fi
 
-  cat <<EOF >>${nginxConfigPath}proxy.conf
+  cat <<EOF >>${nginxConfigPath}/proxy.conf
 server {
     listen 127.0.0.1:31300;
     server_name ${domain};
@@ -1045,7 +1043,7 @@ installTLS() {
 initNginxConfig() {
   echoContent skyBlue "\n进度  $1/${totalProgress} : 配置Nginx"
 
-  cat <<EOF >${nginxConfigPath}proxy.conf
+  cat <<EOF >${nginxConfigPath}/proxy.conf
 server {
     listen 80;
     listen [::]:80;
@@ -1057,7 +1055,7 @@ server {
     }
 
     location /test {
-        return 200 'fjkvymb6len';
+        return 200 'aaa';
     }
 }
 EOF
@@ -1102,7 +1100,7 @@ nginxBlog() {
     if [[ "${nginxBlogInstallStatus}" == "y" ]]; then
       rm -rf /usr/share/nginx/html
 
-      randomNum=$((RANDOM % 6 + 1))
+      randomNum=$((RANDOM % 4 + 1))
       wget -q -P /usr/share/nginx https://raw.githubusercontent.com/ggannann/proxy-install/main/web/html${randomNum}.zip >/dev/null
       unzip -o /usr/share/nginx/html${randomNum}.zip -d /usr/share/nginx/html >/dev/null
       rm -f /usr/share/nginx/html${randomNum}.zip*
@@ -1112,7 +1110,7 @@ nginxBlog() {
   else
     rm -rf /usr/share/nginx/html
 
-    randomNum=$((RANDOM % 6 + 1))
+    randomNum=$((RANDOM % 4 + 1))
     wget -q -P /usr/share/nginx https://raw.githubusercontent.com/ggannann/proxy-install/main/web/html${randomNum}.zip >/dev/null
     unzip -o /usr/share/nginx/html${randomNum}.zip -d /usr/share/nginx/html >/dev/null
     rm -f /usr/share/nginx/html${randomNum}.zip*
@@ -1123,7 +1121,6 @@ nginxBlog() {
 
 # 操作Nginx
 handleNginx() {
-
   if [[ -z $(pgrep -f "nginx") ]] && [[ "$1" == "start" ]]; then
     nginx
     sleep 0.5
@@ -1196,7 +1193,6 @@ renewalTLS() {
 
 # 查看TLS证书的状态
 checkTLStatus() {
-
   if [[ -d "$HOME/.acme.sh/${currentHost}_ecc" ]] && [[ -f "$HOME/.acme.sh/${currentHost}_ecc/${currentHost}.key" ]] && [[ -f "$HOME/.acme.sh/${currentHost}_ecc/${currentHost}.cer" ]]; then
     modifyTime=$(stat "$HOME/.acme.sh/${currentHost}_ecc/${currentHost}.cer" | sed -n '7,6p' | awk '{print $2" "$3" "$4" "$5}')
 
@@ -1746,7 +1742,7 @@ initV2RayConfig() {
   rm -rf /etc/proxy/v2ray/conf/*
   rm -rf /etc/proxy/v2ray/config_full.json
 
-  cat <<EOF >/etc/proxy/v2ray/conf/00_log.json
+  cat <<EOF >/etc/proxy/v2ray/conf/log.json
 {
   "log": {
     "error": "/etc/proxy/v2ray/error.log",
@@ -1770,7 +1766,7 @@ EOF
 EOF
   else
 
-    cat <<EOF >/etc/proxy/v2ray/conf/10_ipv4_outbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/ipv4_outbounds.json
 {
   "outbounds":[
     {
@@ -1797,7 +1793,7 @@ EOF
   fi
 
   # dns
-  cat <<EOF >/etc/proxy/v2ray/conf/11_dns.json
+  cat <<EOF >/etc/proxy/v2ray/conf/dns.json
 {
   "dns": {
     "servers": [
@@ -1813,7 +1809,7 @@ EOF
 
   if echo "${selectCustomInstallType}" | grep -q 4 || [[ "$1" == "all" ]]; then
     fallbacksList='{"dest":31296,"xver":1},{"alpn":"h2","dest":31302,"xver":0}'
-    cat <<EOF >/etc/proxy/v2ray/conf/04_trojan_TCP_inbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/trojan_tcp_inbounds.json
 {
   "inbounds":[
     {
@@ -1850,7 +1846,7 @@ EOF
   # VLESS_WS_TLS
   if echo "${selectCustomInstallType}" | grep -q 1 || [[ "$1" == "all" ]]; then
     fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_ws","dest":31297,"xver":1}'
-    cat <<EOF >/etc/proxy/v2ray/conf/03_VLESS_WS_inbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/vless_ws_inbounds.json
 {
   "inbounds":[
     {
@@ -1886,7 +1882,7 @@ EOF
   # VMess_WS
   if echo "${selectCustomInstallType}" | grep -q 3 || [[ "$1" == "all" ]]; then
     fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_vws","dest":31299,"xver":1}'
-    cat <<EOF >/etc/proxy/v2ray/conf/05_VMess_WS_inbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/vmess_ws_inbounds.json
 {
   "inbounds":[
     {
@@ -1922,7 +1918,7 @@ EOF
 
   # VLESS gRPC
   if echo "${selectCustomInstallType}" | grep -q 5 || [[ "$1" == "all" ]]; then
-    cat <<EOF >/etc/proxy/v2ray/conf/06_VLESS_gRPC_inbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/vless_grpc_inbounds.json
 {
   "inbounds":[
     {
@@ -1956,7 +1952,7 @@ EOF
 
   # VLESS_TCP
   if [[ "${selectCoreType}" == "2" ]]; then
-    cat <<EOF >/etc/proxy/v2ray/conf/02_VLESS_TCP_inbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/vless_tcp_inbounds.json
 {
   "inbounds":[
     {
@@ -1999,7 +1995,7 @@ EOF
 }
 EOF
   elif [[ "${selectCoreType}" == "3" ]]; then
-    cat <<EOF >/etc/proxy/v2ray/conf/02_VLESS_TCP_inbounds.json
+    cat <<EOF >/etc/proxy/v2ray/conf/vless_tcp_inbounds.json
 {
   "inbounds":[
     {
@@ -2046,7 +2042,7 @@ EOF
 
 # 初始化Xray Trojan XTLS 配置文件
 initXrayFrontingConfig() {
-  if [[ -z "${configPath}" ]]; then
+  if [[ -z "${configPath}/" ]]; then
     echoContent red " ---> 未安装，请使用脚本安装"
     menu
     exit 0
@@ -2077,27 +2073,27 @@ initXrayFrontingConfig() {
     if [[ "${xtlsType}" == "Trojan" ]]; then
 
       local VLESSConfig
-      VLESSConfig=$(cat ${configPath}${frontingType}.json)
+      VLESSConfig=$(cat ${configPath}/${frontingType}.json)
       VLESSConfig=${VLESSConfig//"id"/"password"}
       VLESSConfig=${VLESSConfig//VLESSTCP/TrojanTCPXTLS}
       VLESSConfig=${VLESSConfig//VLESS/Trojan}
       VLESSConfig=${VLESSConfig//"vless"/"trojan"}
       VLESSConfig=${VLESSConfig//"id"/"password"}
 
-      echo "${VLESSConfig}" | jq . >${configPath}02_trojan_TCP_inbounds.json
-      rm ${configPath}${frontingType}.json
+      echo "${VLESSConfig}" | jq . >${configPath}/native_trojan_tcp_inbounds.json
+      rm ${configPath}/${frontingType}.json
     elif [[ "${xtlsType}" == "VLESS" ]]; then
 
       local VLESSConfig
-      VLESSConfig=$(cat ${configPath}02_trojan_TCP_inbounds.json)
+      VLESSConfig=$(cat ${configPath}/native_trojan_tcp_inbounds.json)
       VLESSConfig=${VLESSConfig//"password"/"id"}
       VLESSConfig=${VLESSConfig//TrojanTCPXTLS/VLESSTCP}
       VLESSConfig=${VLESSConfig//Trojan/VLESS}
       VLESSConfig=${VLESSConfig//"trojan"/"vless"}
       VLESSConfig=${VLESSConfig//"password"/"id"}
 
-      echo "${VLESSConfig}" | jq . >${configPath}02_VLESS_TCP_inbounds.json
-      rm ${configPath}02_trojan_TCP_inbounds.json
+      echo "${VLESSConfig}" | jq . >${configPath}/vless_tcp_inbounds.json
+      rm ${configPath}/native_trojan_tcp_inbounds.json
     fi
     reloadCore
   fi
@@ -2142,7 +2138,7 @@ initXrayConfig() {
   rm -rf /etc/proxy/xray/conf/*
 
   # log
-  cat <<EOF >/etc/proxy/xray/conf/00_log.json
+  cat <<EOF >/etc/proxy/xray/conf/log.json
 {
   "log": {
     "error": "/etc/proxy/xray/error.log",
@@ -2166,7 +2162,7 @@ EOF
 EOF
 
   else
-    cat <<EOF >/etc/proxy/xray/conf/10_ipv4_outbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/ipv4_outbounds.json
 {
   "outbounds":[
     {
@@ -2195,7 +2191,7 @@ EOF
   fi
 
   # dns
-  cat <<EOF >/etc/proxy/xray/conf/11_dns.json
+  cat <<EOF >/etc/proxy/xray/conf/dns.json
 {
   "dns": {
     "servers": [
@@ -2212,7 +2208,7 @@ EOF
   # trojan
   if echo "${selectCustomInstallType}" | grep -q 4 || [[ "$1" == "all" ]]; then
     fallbacksList='{"dest":31296,"xver":1},{"alpn":"h2","dest":31302,"xver":0}'
-    cat <<EOF >/etc/proxy/xray/conf/04_trojan_TCP_inbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/trojan_tcp_inbounds.json
 {
   "inbounds":[
     {
@@ -2249,7 +2245,7 @@ EOF
   # VLESS_WS_TLS
   if echo "${selectCustomInstallType}" | grep -q 1 || [[ "$1" == "all" ]]; then
     fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_ws","dest":31297,"xver":1}'
-    cat <<EOF >/etc/proxy/xray/conf/03_VLESS_WS_inbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/vless_ws_inbounds.json
 {
   "inbounds":[
     {
@@ -2288,7 +2284,7 @@ EOF
       fallbacksList=${fallbacksList//31302/31304}
     fi
 
-    cat <<EOF >/etc/proxy/xray/conf/04_trojan_gRPC_inbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/trojan_grpc_inbounds.json
 {
   "inbounds": [
     {
@@ -2326,7 +2322,7 @@ EOF
   # VMess_WS
   if echo "${selectCustomInstallType}" | grep -q 3 || [[ "$1" == "all" ]]; then
     fallbacksList=${fallbacksList}',{"path":"/'${customPath}'_vws","dest":31299,"xver":1}'
-    cat <<EOF >/etc/proxy/xray/conf/05_VMess_WS_inbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/vmess_ws_inbounds.json
 {
   "inbounds":[
     {
@@ -2361,7 +2357,7 @@ EOF
   fi
 
   if echo "${selectCustomInstallType}" | grep -q 5 || [[ "$1" == "all" ]]; then
-    cat <<EOF >/etc/proxy/xray/conf/06_VLESS_gRPC_inbounds.json
+    cat <<EOF >/etc/proxy/xray/conf/vless_grpc_inbounds.json
 {
   "inbounds":[
     {
@@ -2394,7 +2390,7 @@ EOF
   fi
 
   # VLESS_TCP
-  cat <<EOF >/etc/proxy/xray/conf/02_VLESS_TCP_inbounds.json
+  cat <<EOF >/etc/proxy/xray/conf/vless_tcp_inbounds.json
 {
   "inbounds":[
     {
@@ -2444,7 +2440,6 @@ EOF
 
 # 初始化Trojan-Go配置
 initTrojanGoConfig() {
-
   echoContent skyBlue "\n进度 $1/${totalProgress} : 初始化Trojan配置"
   cat <<EOF >/etc/proxy/trojan/config_full.json
 {
@@ -2666,45 +2661,45 @@ EOF
   elif [[ "${type}" == "trojan" ]]; then
     # URLEncode
     echoContent yellow " ---> Trojan(TLS)"
-    echoContent green "    trojan://${id}@${host}:${port}?peer=${host}&sni=${host}&alpn=http1.1#${host}_Trojan\n"
+    echoContent green "    trojan://${id}@${host}:${port}?peer=${host}&sni=${host}&alpn=http1.1#${host}_trojan\n"
 
     cat <<EOF >>"/etc/proxy/subscribe_tmp/${subAccount}"
-trojan://${id}@${host}:${port}?peer=${host}&sni=${host}&alpn=http1.1#${host}_Trojan
+trojan://${id}@${host}:${port}?peer=${host}&sni=${host}&alpn=http1.1#${host}_trojan
 EOF
     echoContent yellow " ---> 二维码 Trojan(TLS)"
-    echoContent green "    https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${id}%40${host}%3a${port}%3fpeer%3d${host}%26sni%3d${host}%26alpn%3Dhttp1.1%23${host}_Trojan\n"
+    echoContent green "    https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${id}%40${host}%3a${port}%3fpeer%3d${host}%26sni%3d${host}%26alpn%3Dhttp1.1%23${host}_trojan\n"
 
   elif [[ "${type}" == "trojangrpc" ]]; then
     # URLEncode
 
     echoContent yellow " ---> Trojan gRPC(TLS)"
-    echoContent green "    trojan://${id}@${host}:${port}?encryption=none&peer=${host}&security=tls&type=grpc&sni=${host}&alpn=h2&path=${path}&serviceName=${path}#${host}_Trojan_gRPC\n"
+    echoContent green "    trojan://${id}@${host}:${port}?encryption=none&peer=${host}&security=tls&type=grpc&sni=${host}&alpn=h2&path=${path}&serviceName=${path}#${host}_trojan_grpc\n"
 
     cat <<EOF >>"/etc/proxy/subscribe_tmp/${subAccount}"
-trojan://${id}@${host}:${port}?encryption=none&peer=${host}&security=tls&type=grpc&sni=${host}&alpn=h2&path=${path}&serviceName=${path}#${host}_Trojan_gRPC
+trojan://${id}@${host}:${port}?encryption=none&peer=${host}&security=tls&type=grpc&sni=${host}&alpn=h2&path=${path}&serviceName=${path}#${host}_trojan_grpc
 EOF
     echoContent yellow " ---> 二维码 Trojan gRPC(TLS)"
-    echoContent green "    https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${id}%40${host}%3a${port}%3Fencryption%3Dnone%26security%3Dtls%26peer%3d${host}%26type%3Dgrpc%26sni%3d${host}%26path%3D${path}%26alpn%3D=h2%26serviceName%3D${path}%23${host}_Trojan_gRPC\n"
+    echoContent green "    https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${id}%40${host}%3a${port}%3Fencryption%3Dnone%26security%3Dtls%26peer%3d${host}%26type%3Dgrpc%26sni%3d${host}%26path%3D${path}%26alpn%3D=h2%26serviceName%3D${path}%23${host}_trojan_grpc\n"
 
   elif [[ "${type}" == "trojangows" ]]; then
     # URLEncode
     echoContent yellow " ---> Trojan-Go(WS+TLS) Shadowrocket"
-    echoContent green "    trojan://${id}@${add}:${port}?allowInsecure=0&&peer=${host}&sni=${host}&plugin=obfs-local;obfs=websocket;obfs-host=${host};obfs-uri=${path}#${host}_Trojan_ws\n"
+    echoContent green "    trojan://${id}@${add}:${port}?allowInsecure=0&&peer=${host}&sni=${host}&plugin=obfs-local;obfs=websocket;obfs-host=${host};obfs-uri=${path}#${host}_trojan_ws\n"
 
     cat <<EOF >>"/etc/proxy/subscribe_tmp/${subAccount}"
-trojan://${id}@${add}:${port}?allowInsecure=0&&peer=${host}&sni=${host}&plugin=obfs-local;obfs=websocket;obfs-host=${host};obfs-uri=${path}#${host}_Trojan_ws
+trojan://${id}@${add}:${port}?allowInsecure=0&&peer=${host}&sni=${host}&plugin=obfs-local;obfs=websocket;obfs-host=${host};obfs-uri=${path}#${host}_trojan_ws
 EOF
     echoContent yellow " ---> 二维码 Trojan-Go(WS+TLS) Shadowrocket"
-    echoContent green "    https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${id}%40${add}%3a${port}%3fallowInsecure%3d0%26peer%3d${host}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${host}%3bobfs-uri%3d${path}%23${host}_Trojan_ws\n"
+    echoContent green "    https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=trojan%3a%2f%2f${id}%40${add}%3a${port}%3fallowInsecure%3d0%26peer%3d${host}%26plugin%3dobfs-local%3bobfs%3dwebsocket%3bobfs-host%3d${host}%3bobfs-uri%3d${path}%23${host}_trojan_ws\n"
 
     path=$(echo "${path}" | awk -F "[/]" '{print $2}')
     echoContent yellow " ---> Trojan-Go(WS+TLS) QV2ray"
 
     cat <<EOF >>"/etc/proxy/subscribe_tmp/${subAccount}"
-trojan-go://${id}@${add}:${port}?sni=${host}&type=ws&host=${host}&path=%2F${path}#${host}_Trojan_ws
+trojan-go://${id}@${add}:${port}?sni=${host}&type=ws&host=${host}&path=%2F${path}#${host}_trojan_ws
 EOF
 
-    echoContent green "    trojan-go://${id}@${add}:${port}?sni=${host}&type=ws&host=${host}&path=%2F${path}#${host}_Trojan_ws\n"
+    echoContent green "    trojan-go://${id}@${add}:${port}?sni=${host}&type=ws&host=${host}&path=%2F${path}#${host}_trojan_ws\n"
 
   fi
 }
@@ -2721,7 +2716,7 @@ showAccounts() {
     show=1
     if echo "${currentInstallProtocolType}" | grep -q trojan; then
       echoContent skyBlue "===================== Trojan TCP TLS/XTLS-direct/XTLS-splice ======================\n"
-      jq .inbounds[0].settings.clients ${configPath}02_trojan_TCP_inbounds.json | jq -c '.[]' | while read -r user; do
+      jq .inbounds[0].settings.clients ${configPath}/native_trojan_tcp_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .password)"
         echo
         defaultBase64Code trojanTCPXTLS "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .password)" "${currentHost}:${currentPort}" "${currentHost}"
@@ -2729,7 +2724,7 @@ showAccounts() {
 
     else
       echoContent skyBlue "===================== VLESS TCP TLS/XTLS-direct/XTLS-splice ======================\n"
-      jq .inbounds[0].settings.clients ${configPath}02_VLESS_TCP_inbounds.json | jq -c '.[]' | while read -r user; do
+      jq .inbounds[0].settings.clients ${configPath}/vless_tcp_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .id)"
         echo
         defaultBase64Code vlesstcp "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .id)" "${currentHost}:${currentPort}" "${currentHost}"
@@ -2740,13 +2735,13 @@ showAccounts() {
     if echo ${currentInstallProtocolType} | grep -q 1; then
       echoContent skyBlue "\n================================ VLESS WS TLS CDN ================================\n"
 
-      jq .inbounds[0].settings.clients ${configPath}03_VLESS_WS_inbounds.json | jq -c '.[]' | while read -r user; do
+      jq .inbounds[0].settings.clients ${configPath}/vless_ws_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .id)"
         echo
-        local path="${currentPath}ws"
+        local path="${currentPath}_ws"
         if [[ ${coreInstallType} == "1" ]]; then
           echoContent yellow "Xray的0-RTT path后面会有?ed=2048，不兼容以v2ray为核心的客户端，请手动删除?ed=2048后使用\n"
-          path="${currentPath}ws?ed=2048"
+          path="${currentPath}_ws?ed=2048"
         fi
         defaultBase64Code vlessws "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .id)" "${currentHost}:${currentPort}" "${path}" "${currentAdd}"
       done
@@ -2755,11 +2750,11 @@ showAccounts() {
     # VMess WS
     if echo ${currentInstallProtocolType} | grep -q 3; then
       echoContent skyBlue "\n================================ VMess WS TLS CDN ================================\n"
-      local path="${currentPath}vws"
+      local path="${currentPath}_vws"
       if [[ ${coreInstallType} == "1" ]]; then
-        path="${currentPath}vws?ed=2048"
+        path="${currentPath}_vws?ed=2048"
       fi
-      jq .inbounds[0].settings.clients ${configPath}05_VMess_WS_inbounds.json | jq -c '.[]' | while read -r user; do
+      jq .inbounds[0].settings.clients ${configPath}/vmess_ws_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .id)"
         echo
         defaultBase64Code vmessws "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .id)" "${currentHost}:${currentPort}" "${path}" "${currentAdd}"
@@ -2771,8 +2766,8 @@ showAccounts() {
       echoContent skyBlue "\n=============================== VLESS gRPC TLS CDN ===============================\n"
       echoContent red "\n --->gRPC目前处于测试阶段，可能对你使用的客户端不兼容，如不能使用请忽略"
       local serviceName
-      serviceName=$(jq -r .inbounds[0].streamSettings.grpcSettings.serviceName ${configPath}06_VLESS_gRPC_inbounds.json)
-      jq .inbounds[0].settings.clients ${configPath}06_VLESS_gRPC_inbounds.json | jq -c '.[]' | while read -r user; do
+      serviceName=$(jq -r .inbounds[0].streamSettings.grpcSettings.serviceName ${configPath}/vless_grpc_inbounds.json)
+      jq .inbounds[0].settings.clients ${configPath}/vless_grpc_inbounds.json | jq -c '.[]' | while read -r user; do
         echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .id)"
         echo
         defaultBase64Code vlessgrpc "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .id)" "${currentHost}:${currentPort}" "${serviceName}" "${currentAdd}"
@@ -2783,7 +2778,7 @@ showAccounts() {
   # trojan tcp
   if echo ${currentInstallProtocolType} | grep -q 4; then
     echoContent skyBlue "\n==================================  Trojan TLS  ==================================\n"
-    jq .inbounds[0].settings.clients ${configPath}04_trojan_TCP_inbounds.json | jq -c '.[]' | while read -r user; do
+    jq .inbounds[0].settings.clients ${configPath}/trojan_tcp_inbounds.json | jq -c '.[]' | while read -r user; do
       echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .password)"
       echo
       defaultBase64Code trojan trojan "$(echo "${user}" | jq -r .password)" "${currentHost}"
@@ -2794,8 +2789,8 @@ showAccounts() {
     echoContent skyBlue "\n================================  Trojan gRPC TLS  ================================\n"
     echoContent red "\n --->gRPC目前处于测试阶段，可能对你使用的客户端不兼容，如不能使用请忽略"
     local serviceName=
-    serviceName=$(jq -r .inbounds[0].streamSettings.grpcSettings.serviceName ${configPath}04_trojan_gRPC_inbounds.json)
-    jq .inbounds[0].settings.clients ${configPath}04_trojan_gRPC_inbounds.json | jq -c '.[]' | while read -r user; do
+    serviceName=$(jq -r .inbounds[0].streamSettings.grpcSettings.serviceName ${configPath}/trojan_grpc_inbounds.json)
+    jq .inbounds[0].settings.clients ${configPath}/trojan_grpc_inbounds.json | jq -c '.[]' | while read -r user; do
       echoContent skyBlue "\n ---> 帐号：$(echo "${user}" | jq -r .email)_$(echo "${user}" | jq -r .password)"
       echo
       defaultBase64Code trojangrpc "$(echo "${user}" | jq -r .email)" "$(echo "${user}" | jq -r .password)" "${currentHost}:${currentPort}" "${serviceName}" "${currentAdd}"
@@ -2813,20 +2808,15 @@ updateNginxBlog() {
   echoContent red "=============================================================="
   echoContent yellow "# 如需自定义，请手动复制模版文件到 /usr/share/nginx/html"
   echoContent red "=============================================================="
-  echoContent yellow "1.新手引导"
-  echoContent yellow "2.游戏网站"
-  echoContent yellow "3.个人博客01"
-  echoContent yellow "4.企业站"
-  echoContent yellow "5.解锁加密的音乐文件模版[https://github.com/ix64/unlock-music]"
-  echoContent yellow "6.mikutap[https://github.com/HFIProgramming/mikutap]"
-  echoContent yellow "7.企业站02"
-  echoContent yellow "8.个人博客02"
-  echoContent yellow "9.404自动跳转baidu"
-  echoContent yellow "10.WebGL Fluid Simulation"
+  echoContent yellow "1.404自动跳转baidu"
+  echoContent yellow "2.解锁加密的音乐文件模版 [https://github.com/ix64/unlock-music]"
+  echoContent yellow "3.mikutap [https://github.com/HFIProgramming/mikutap]"
+  echoContent yellow "4.WebGL Fluid Simulation [https://github.com/PavelDoGreat/WebGL-Fluid-Simulation]"
   echoContent red "=============================================================="
   read -r -p "请选择:" selectInstallNginxBlogType
+  echoContent red "${selectInstallNginxBlogType}"
 
-  if [[ "${selectInstallNginxBlogType}" =~ ^[1-10]+$ ]]; then
+  if [[ "${selectInstallNginxBlogType}" =~ ^[1-4]+$ ]]; then
     # rm -rf /usr/share/nginx/html
     rm -rf /usr/share/nginx/*
     if wget --help | grep -q show-progress; then
@@ -2864,7 +2854,7 @@ addCorePort() {
     if [[ -n "${newPort}" ]]; then
 
       while read -r port; do
-        cat <<EOF >"${configPath}02_dokodemodoor_inbounds_${port}.json"
+        cat <<EOF >"${configPath}/dokodemodoor_inbounds_${port}.json"
 {
   "inbounds": [
     {
@@ -2889,12 +2879,12 @@ EOF
     fi
   elif [[ "${selectNewPortType}" == "2" ]]; then
 
-    find ${configPath} -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}'
+    find ${configPath}/ -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}'
     read -r -p "请输入要删除的端口编号：" portIndex
     local dokoConfig
-    dokoConfig=$(find ${configPath} -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}' | grep "${portIndex}:")
+    dokoConfig=$(find ${configPath}/ -name "*dokodemodoor*" | awk -F "[c][o][n][f][/]" '{print ""NR""":"$2}' | grep "${portIndex}:")
     if [[ -n "${dokoConfig}" ]]; then
-      rm "${configPath}/$(echo "${dokoConfig}" | awk -F "[:]" '{print $2}')"
+      rm "${configPath}//$(echo "${dokoConfig}" | awk -F "[:]" '{print $2}')"
       reloadCore
     else
       echoContent yellow "\n ---> 编号输入错误，请重新选择"
@@ -2939,7 +2929,7 @@ unInstall() {
   fi
 
   rm -rf /etc/proxy
-  rm -rf ${nginxConfigPath}proxy.conf
+  rm -rf ${nginxConfigPath}/proxy.conf
   rm -rf /usr/bin/proxy
   rm -rf /usr/sbin/proxy
   echoContent green " ---> 卸载快捷方式完成"
@@ -2948,7 +2938,6 @@ unInstall() {
 
 # 修改V2Ray CDN节点
 updateV2RayCDN() {
-
   # todo 重构此方法
   echoContent skyBlue "\n进度 $1/${totalProgress} : 修改CDN节点"
 
@@ -2977,9 +2966,9 @@ updateV2RayCDN() {
 
     if [[ -n ${setDomain} ]]; then
       if [[ -n "${currentAdd}" ]]; then
-        sed -i "s/\"${currentAdd}\"/\"${setDomain}\"/g" "$(grep "${currentAdd}" -rl ${configPath}${frontingType}.json)"
+        sed -i "s/\"${currentAdd}\"/\"${setDomain}\"/g" "$(grep "${currentAdd}" -rl ${configPath}/${frontingType}.json)"
       fi
-      if [[ $(jq -r .inbounds[0].settings.clients[0].add ${configPath}${frontingType}.json) == "${setDomain}" ]]; then
+      if [[ $(jq -r .inbounds[0].settings.clients[0].add ${configPath}/${frontingType}.json) == "${setDomain}" ]]; then
         echoContent green " ---> CDN修改成功"
         reloadCore
       else
@@ -3018,7 +3007,7 @@ customUUID() {
     if [[ -z "${currentCustomUUID}" ]]; then
       echoContent red " ---> UUID不可为空"
     else
-      jq -r -c '.inbounds[0].settings.clients[].id' ${configPath}${frontingType}.json | while read -r line; do
+      jq -r -c '.inbounds[0].settings.clients[].id' ${configPath}/${frontingType}.json | while read -r line; do
         if [[ "${line}" == "${currentCustomUUID}" ]]; then
           echo >/tmp/proxy
         fi
@@ -3042,7 +3031,7 @@ customUserEmail() {
     if [[ -z "${currentCustomEmail}" ]]; then
       echoContent red " ---> email不可为空"
     else
-      jq -r -c '.inbounds[0].settings.clients[].email' ${configPath}${frontingType}.json | while read -r line; do
+      jq -r -c '.inbounds[0].settings.clients[].email' ${configPath}/${frontingType}.json | while read -r line; do
         if [[ "${line}" == "${currentCustomEmail}" ]]; then
           echo >/tmp/proxy
         fi
@@ -3058,7 +3047,6 @@ customUserEmail() {
 
 # 添加用户
 addUser() {
-
   echoContent yellow "添加新用户后，需要重新查看订阅"
   read -r -p "请输入要添加的用户数量：" userNum
   echo
@@ -3099,8 +3087,8 @@ addUser() {
       local vlessUsers="${users//\,\"alterId\":0/}"
 
       local vlessTcpResult
-      vlessTcpResult=$(jq -r ".inbounds[0].settings.clients += [${vlessUsers}]" ${configPath}${frontingType}.json)
-      echo "${vlessTcpResult}" | jq . >${configPath}${frontingType}.json
+      vlessTcpResult=$(jq -r ".inbounds[0].settings.clients += [${vlessUsers}]" ${configPath}/${frontingType}.json)
+      echo "${vlessTcpResult}" | jq . >${configPath}/${frontingType}.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q trojan; then
@@ -3108,16 +3096,16 @@ addUser() {
       trojanXTLSUsers=${trojanXTLSUsers//"id"/"password"}
 
       local trojanXTLSResult
-      trojanXTLSResult=$(jq -r ".inbounds[0].settings.clients += [${trojanXTLSUsers}]" ${configPath}${frontingType}.json)
-      echo "${trojanXTLSResult}" | jq . >${configPath}${frontingType}.json
+      trojanXTLSResult=$(jq -r ".inbounds[0].settings.clients += [${trojanXTLSUsers}]" ${configPath}/${frontingType}.json)
+      echo "${trojanXTLSResult}" | jq . >${configPath}/${frontingType}.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 1; then
       local vlessUsers="${users//\,\"alterId\":0/}"
       vlessUsers="${vlessUsers//\"flow\":\"xtls-rprx-direct\"\,/}"
       local vlessWsResult
-      vlessWsResult=$(jq -r ".inbounds[0].settings.clients += [${vlessUsers}]" ${configPath}03_VLESS_WS_inbounds.json)
-      echo "${vlessWsResult}" | jq . >${configPath}03_VLESS_WS_inbounds.json
+      vlessWsResult=$(jq -r ".inbounds[0].settings.clients += [${vlessUsers}]" ${configPath}/vless_ws_inbounds.json)
+      echo "${vlessWsResult}" | jq . >${configPath}/vless_ws_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 2; then
@@ -3126,16 +3114,16 @@ addUser() {
       trojangRPCUsers=${trojangRPCUsers//"id"/"password"}
 
       local trojangRPCResult
-      trojangRPCResult=$(jq -r ".inbounds[0].settings.clients += [${trojangRPCUsers}]" ${configPath}04_trojan_gRPC_inbounds.json)
-      echo "${trojangRPCResult}" | jq . >${configPath}04_trojan_gRPC_inbounds.json
+      trojangRPCResult=$(jq -r ".inbounds[0].settings.clients += [${trojangRPCUsers}]" ${configPath}/trojan_grpc_inbounds.json)
+      echo "${trojangRPCResult}" | jq . >${configPath}/trojan_grpc_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 3; then
       local vmessUsers="${users//\"flow\":\"xtls-rprx-direct\"\,/}"
 
       local vmessWsResult
-      vmessWsResult=$(jq -r ".inbounds[0].settings.clients += [${vmessUsers}]" ${configPath}05_VMess_WS_inbounds.json)
-      echo "${vmessWsResult}" | jq . >${configPath}05_VMess_WS_inbounds.json
+      vmessWsResult=$(jq -r ".inbounds[0].settings.clients += [${vmessUsers}]" ${configPath}/vmess_ws_inbounds.json)
+      echo "${vmessWsResult}" | jq . >${configPath}/vmess_ws_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 5; then
@@ -3143,8 +3131,8 @@ addUser() {
       vlessGRPCUsers="${vlessGRPCUsers//\,\"alterId\":0/}"
 
       local vlessGRPCResult
-      vlessGRPCResult=$(jq -r ".inbounds[0].settings.clients += [${vlessGRPCUsers}]" ${configPath}06_VLESS_gRPC_inbounds.json)
-      echo "${vlessGRPCResult}" | jq . >${configPath}06_VLESS_gRPC_inbounds.json
+      vlessGRPCResult=$(jq -r ".inbounds[0].settings.clients += [${vlessGRPCUsers}]" ${configPath}/vless_grpc_inbounds.json)
+      echo "${vlessGRPCResult}" | jq . >${configPath}/vless_grpc_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 4; then
@@ -3153,8 +3141,8 @@ addUser() {
       trojanUsers="${trojanUsers//\,\"alterId\":0/}"
 
       local trojanTCPResult
-      trojanTCPResult=$(jq -r ".inbounds[0].settings.clients += [${trojanUsers}]" ${configPath}04_trojan_TCP_inbounds.json)
-      echo "${trojanTCPResult}" | jq . >${configPath}04_trojan_TCP_inbounds.json
+      trojanTCPResult=$(jq -r ".inbounds[0].settings.clients += [${trojanUsers}]" ${configPath}/trojan_tcp_inbounds.json)
+      echo "${trojanTCPResult}" | jq . >${configPath}/trojan_tcp_inbounds.json
     fi
   done
 
@@ -3165,48 +3153,47 @@ addUser() {
 
 # 移除用户
 removeUser() {
-
   if echo ${currentInstallProtocolType} | grep -q 0 || echo ${currentInstallProtocolType} | grep -q trojan; then
-    jq -r -c .inbounds[0].settings.clients[].email ${configPath}${frontingType}.json | awk '{print NR""":"$0}'
+    jq -r -c .inbounds[0].settings.clients[].email ${configPath}/${frontingType}.json | awk '{print NR""":"$0}'
     read -r -p "请选择要删除的用户编号[仅支持单个删除]:" delUserIndex
-    if [[ $(jq -r '.inbounds[0].settings.clients|length' ${configPath}${frontingType}.json) -lt ${delUserIndex} ]]; then
+    if [[ $(jq -r '.inbounds[0].settings.clients|length' ${configPath}/${frontingType}.json) -lt ${delUserIndex} ]]; then
       echoContent red " ---> 选择错误"
     else
       delUserIndex=$((delUserIndex - 1))
       local vlessTcpResult
-      vlessTcpResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}${frontingType}.json)
-      echo "${vlessTcpResult}" | jq . >${configPath}${frontingType}.json
+      vlessTcpResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}/${frontingType}.json)
+      echo "${vlessTcpResult}" | jq . >${configPath}/${frontingType}.json
     fi
   fi
   if [[ -n "${delUserIndex}" ]]; then
     if echo ${currentInstallProtocolType} | grep -q 1; then
       local vlessWSResult
-      vlessWSResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}03_VLESS_WS_inbounds.json)
-      echo "${vlessWSResult}" | jq . >${configPath}03_VLESS_WS_inbounds.json
+      vlessWSResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}/vless_ws_inbounds.json)
+      echo "${vlessWSResult}" | jq . >${configPath}/vless_ws_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 2; then
       local trojangRPCUsers
-      trojangRPCUsers=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}04_trojan_gRPC_inbounds.json)
-      echo "${trojangRPCUsers}" | jq . >${configPath}04_trojan_gRPC_inbounds.json
+      trojangRPCUsers=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}/trojan_grpc_inbounds.json)
+      echo "${trojangRPCUsers}" | jq . >${configPath}/trojan_grpc_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 3; then
       local vmessWSResult
-      vmessWSResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}05_VMess_WS_inbounds.json)
-      echo "${vmessWSResult}" | jq . >${configPath}05_VMess_WS_inbounds.json
+      vmessWSResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}/vmess_ws_inbounds.json)
+      echo "${vmessWSResult}" | jq . >${configPath}/vmess_ws_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 5; then
       local vlessGRPCResult
-      vlessGRPCResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}06_VLESS_gRPC_inbounds.json)
-      echo "${vlessGRPCResult}" | jq . >${configPath}06_VLESS_gRPC_inbounds.json
+      vlessGRPCResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}/vless_grpc_inbounds.json)
+      echo "${vlessGRPCResult}" | jq . >${configPath}/vless_grpc_inbounds.json
     fi
 
     if echo ${currentInstallProtocolType} | grep -q 4; then
       local trojanTCPResult
-      trojanTCPResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}04_trojan_TCP_inbounds.json)
-      echo "${trojanTCPResult}" | jq . >${configPath}04_trojan_TCP_inbounds.json
+      trojanTCPResult=$(jq -r 'del(.inbounds[0].settings.clients['${delUserIndex}'])' ${configPath}/trojan_tcp_inbounds.json)
+      echo "${trojanTCPResult}" | jq . >${configPath}/trojan_tcp_inbounds.json
     fi
 
     reloadCore
@@ -3270,11 +3257,11 @@ bbrInstall() {
 
 # 查看、检查日志
 checkLog() {
-  if [[ -z ${configPath} ]]; then
+  if [[ -z ${configPath}/ ]]; then
     echoContent red " ---> 没有检测到安装目录，请执行脚本安装内容"
   fi
   local logStatus=false
-  if grep -q "access" ${configPath}00_log.json; then
+  if grep -q "access" ${configPath}/log.json; then
     logStatus=true
   fi
 
@@ -3301,7 +3288,7 @@ checkLog() {
   case ${selectAccessLogType} in
   1)
     if [[ "${logStatus}" == "false" ]]; then
-      cat <<EOF >${configPath}00_log.json
+      cat <<EOF >${configPath}/log.json
 {
   "log": {
     "access":"${configPathLog}access.log",
@@ -3311,7 +3298,7 @@ checkLog() {
 }
 EOF
     elif [[ "${logStatus}" == "true" ]]; then
-      cat <<EOF >${configPath}00_log.json
+      cat <<EOF >${configPath}/log.json
 {
   "log": {
     "error": "${configPathLog}error.log",
@@ -3344,9 +3331,8 @@ EOF
 
 # 脚本快捷方式
 aliasInstall() {
-
   if [[ -f "$HOME/scripts/proxy-install.sh" ]] && [[ -d "/etc/proxy" ]] && grep <"$HOME/scripts/proxy-install.sh" -q "作者：Gan Nan"; then
-    mv "$HOME/scripts/proxy-install.sh" /etc/proxy/install.sh
+    cp "$HOME/scripts/proxy-install.sh" /etc/proxy/install.sh
     local proxyType=
     if [[ -d "/usr/bin/" ]]; then
       if [[ ! -f "/usr/bin/proxy" ]]; then
@@ -3354,15 +3340,14 @@ aliasInstall() {
         chmod 700 /usr/bin/proxy
         proxyType=true
       fi
-
-      rm -rf "$HOME/scripts/proxy-install.sh"
+      # rm -rf "$HOME/scripts/proxy-install.sh"
     elif [[ -d "/usr/sbin" ]]; then
       if [[ ! -f "/usr/sbin/proxy" ]]; then
         ln -s /etc/proxy/install.sh /usr/sbin/proxy
         chmod 700 /usr/sbin/proxy
         proxyType=true
       fi
-      rm -rf "$HOME/scripts/proxy-install.sh"
+      # rm -rf "$HOME/scripts/proxy-install.sh"
     fi
     if [[ "${proxyType}" == "true" ]]; then
       echoContent green "快捷方式创建成功，可执行[proxy]重新打开脚本"
@@ -3383,7 +3368,7 @@ checkIPv6() {
 
 # ipv6 分流
 ipv6Routing() {
-  if [[ -z "${configPath}" ]]; then
+  if [[ -z "${configPath}/" ]]; then
     echoContent red " ---> 未安装，请使用脚本安装"
     menu
     exit 0
@@ -3407,16 +3392,16 @@ ipv6Routing() {
     echoContent yellow "6.录入示例:google,youtube,facebook\n"
     read -r -p "请按照上面示例录入域名:" domainList
 
-    if [[ -f "${configPath}09_routing.json" ]]; then
+    if [[ -f "${configPath}/routing.json" ]]; then
 
       unInstallRouting IPv6-out
 
-      routing=$(jq -r ".routing.rules += [{\"type\":\"field\",\"domain\":[\"geosite:${domainList//,/\",\"geosite:}\"],\"outboundTag\":\"IPv6-out\"}]" ${configPath}09_routing.json)
+      routing=$(jq -r ".routing.rules += [{\"type\":\"field\",\"domain\":[\"geosite:${domainList//,/\",\"geosite:}\"],\"outboundTag\":\"IPv6-out\"}]" ${configPath}/routing.json)
 
-      echo "${routing}" | jq . >${configPath}09_routing.json
+      echo "${routing}" | jq . >${configPath}/routing.json
 
     else
-      cat <<EOF >"${configPath}09_routing.json"
+      cat <<EOF >"${configPath}/routing.json"
 {
   "routing":{
     "domainStrategy": "IPOnDemand",
@@ -3436,9 +3421,9 @@ EOF
 
     unInstallOutbounds IPv6-out
 
-    outbounds=$(jq -r '.outbounds += [{"protocol":"freedom","settings":{"domainStrategy":"UseIPv6"},"tag":"IPv6-out"}]' ${configPath}10_ipv4_outbounds.json)
+    outbounds=$(jq -r '.outbounds += [{"protocol":"freedom","settings":{"domainStrategy":"UseIPv6"},"tag":"IPv6-out"}]' ${configPath}/ipv4_outbounds.json)
 
-    echo "${outbounds}" | jq . >${configPath}10_ipv4_outbounds.json
+    echo "${outbounds}" | jq . >${configPath}/ipv4_outbounds.json
 
     echoContent green " ---> 添加成功"
 
@@ -3459,7 +3444,7 @@ EOF
 
 # bt下载管理
 btTools() {
-  if [[ -z "${configPath}" ]]; then
+  if [[ -z "${configPath}/" ]]; then
     echoContent red " ---> 未安装，请使用脚本安装"
     menu
     exit 0
@@ -3468,7 +3453,7 @@ btTools() {
   echoContent skyBlue "\n功能 1/${totalProgress} : bt下载管理"
   echoContent red "\n=============================================================="
 
-  if [[ -f ${configPath}09_routing.json ]] && grep -q bittorrent <${configPath}09_routing.json; then
+  if [[ -f ${configPath}/routing.json ]] && grep -q bittorrent <${configPath}/routing.json; then
     echoContent yellow "当前状态：已禁用"
   else
     echoContent yellow "当前状态：未禁用"
@@ -3480,16 +3465,16 @@ btTools() {
   read -r -p "请选择:" btStatus
   if [[ "${btStatus}" == "1" ]]; then
 
-    if [[ -f "${configPath}09_routing.json" ]]; then
+    if [[ -f "${configPath}/routing.json" ]]; then
 
       unInstallRouting blackhole-out
 
-      routing=$(jq -r '.routing.rules += [{"type":"field","outboundTag":"blackhole-out","protocol":["bittorrent"]}]' ${configPath}09_routing.json)
+      routing=$(jq -r '.routing.rules += [{"type":"field","outboundTag":"blackhole-out","protocol":["bittorrent"]}]' ${configPath}/routing.json)
 
-      echo "${routing}" | jq . >${configPath}09_routing.json
+      echo "${routing}" | jq . >${configPath}/routing.json
 
     else
-      cat <<EOF >${configPath}09_routing.json
+      cat <<EOF >${configPath}/routing.json
 {
   "routing":{
     "domainStrategy": "IPOnDemand",
@@ -3509,9 +3494,9 @@ EOF
 
     unInstallOutbounds blackhole-out
 
-    outbounds=$(jq -r '.outbounds += [{"protocol":"blackhole","tag":"blackhole-out"}]' ${configPath}10_ipv4_outbounds.json)
+    outbounds=$(jq -r '.outbounds += [{"protocol":"blackhole","tag":"blackhole-out"}]' ${configPath}/ipv4_outbounds.json)
 
-    echo "${outbounds}" | jq . >${configPath}10_ipv4_outbounds.json
+    echo "${outbounds}" | jq . >${configPath}/ipv4_outbounds.json
 
     echoContent green " ---> BT下载禁用成功"
 
@@ -3536,14 +3521,14 @@ EOF
 unInstallRouting() {
   local tag=$1
 
-  if [[ -f "${configPath}09_routing.json" ]]; then
+  if [[ -f "${configPath}/routing.json" ]]; then
     local routing
-    if grep -q "${tag}" ${configPath}09_routing.json; then
+    if grep -q "${tag}" ${configPath}/routing.json; then
       local index
-      index=$(jq .routing.rules[].outboundTag ${configPath}09_routing.json | awk '{print ""NR""":"$0}' | grep "${tag}" | awk -F "[:]" '{print $1}' | head -1)
+      index=$(jq .routing.rules[].outboundTag ${configPath}/routing.json | awk '{print ""NR""":"$0}' | grep "${tag}" | awk -F "[:]" '{print $1}' | head -1)
       if [[ ${index} -gt 0 ]]; then
-        routing=$(jq -r 'del(.routing.rules['"$(("${index}" - 1))"'])' ${configPath}09_routing.json)
-        echo "${routing}" | jq . >${configPath}09_routing.json
+        routing=$(jq -r 'del(.routing.rules['"$(("${index}" - 1))"'])' ${configPath}/routing.json)
+        echo "${routing}" | jq . >${configPath}/routing.json
       fi
     fi
   fi
@@ -3553,12 +3538,12 @@ unInstallRouting() {
 unInstallOutbounds() {
   local tag=$1
 
-  if grep -q "${tag}" ${configPath}10_ipv4_outbounds.json; then
+  if grep -q "${tag}" ${configPath}/ipv4_outbounds.json; then
     local ipv6OutIndex
-    ipv6OutIndex=$(jq .outbounds[].tag ${configPath}10_ipv4_outbounds.json | awk '{print ""NR""":"$0}' | grep "${tag}" | awk -F "[:]" '{print $1}' | head -1)
+    ipv6OutIndex=$(jq .outbounds[].tag ${configPath}/ipv4_outbounds.json | awk '{print ""NR""":"$0}' | grep "${tag}" | awk -F "[:]" '{print $1}' | head -1)
     if [[ ${ipv6OutIndex} -gt 0 ]]; then
-      routing=$(jq -r 'del(.outbounds['$(("${ipv6OutIndex}" - 1))'])' ${configPath}10_ipv4_outbounds.json)
-      echo "${routing}" | jq . >${configPath}10_ipv4_outbounds.json
+      routing=$(jq -r 'del(.outbounds['$(("${ipv6OutIndex}" - 1))'])' ${configPath}/ipv4_outbounds.json)
+      echo "${routing}" | jq . >${configPath}/ipv4_outbounds.json
     fi
   fi
 
@@ -3566,19 +3551,18 @@ unInstallOutbounds() {
 
 # 卸载嗅探
 unInstallSniffing() {
-
-  find ${configPath} -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
-    sniffing=$(jq -r 'del(.inbounds[0].sniffing)' "${configPath}${inbound}")
-    echo "${sniffing}" | jq . >"${configPath}${inbound}"
+  find ${configPath}/ -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
+    sniffing=$(jq -r 'del(.inbounds[0].sniffing)' "${configPath}/${inbound}")
+    echo "${sniffing}" | jq . >"${configPath}/${inbound}"
   done
 }
 
 # 安装嗅探
 installSniffing() {
 
-  find ${configPath} -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
-    sniffing=$(jq -r '.inbounds[0].sniffing = {"enabled":true,"destOverride":["http","tls"]}' "${configPath}${inbound}")
-    echo "${sniffing}" | jq . >"${configPath}${inbound}"
+  find ${configPath}/ -name "*inbounds.json*" | awk -F "[c][o][n][f][/]" '{print $2}' | while read -r inbound; do
+    sniffing=$(jq -r '.inbounds[0].sniffing = {"enabled":true,"destOverride":["http","tls"]}' "${configPath}/${inbound}")
+    echo "${sniffing}" | jq . >"${configPath}/${inbound}"
   done
 }
 
@@ -3620,15 +3604,15 @@ warpRouting() {
     echoContent yellow "7.录入示例:google,youtube,facebook\n"
     read -r -p "请按照上面示例录入域名:" domainList
 
-    if [[ -f "${configPath}09_routing.json" ]]; then
+    if [[ -f "${configPath}/routing.json" ]]; then
       unInstallRouting warp-socks-out
 
-      routing=$(jq -r ".routing.rules += [{\"type\":\"field\",\"domain\":[\"geosite:${domainList//,/\",\"geosite:}\"],\"outboundTag\":\"warp-socks-out\"}]" ${configPath}09_routing.json)
+      routing=$(jq -r ".routing.rules += [{\"type\":\"field\",\"domain\":[\"geosite:${domainList//,/\",\"geosite:}\"],\"outboundTag\":\"warp-socks-out\"}]" ${configPath}/routing.json)
 
-      echo "${routing}" | jq . >${configPath}09_routing.json
+      echo "${routing}" | jq . >${configPath}/routing.json
 
     else
-      cat <<EOF >${configPath}09_routing.json
+      cat <<EOF >${configPath}/routing.json
 {
     "routing":{
         "domainStrategy": "IPOnDemand",
@@ -3648,9 +3632,9 @@ EOF
     unInstallOutbounds warp-socks-out
 
     local outbounds
-    outbounds=$(jq -r '.outbounds += [{"protocol":"socks","settings":{"servers":[{"address":"127.0.0.1","port":31303}]},"tag":"warp-socks-out"}]' ${configPath}10_ipv4_outbounds.json)
+    outbounds=$(jq -r '.outbounds += [{"protocol":"socks","settings":{"servers":[{"address":"127.0.0.1","port":31303}]},"tag":"warp-socks-out"}]' ${configPath}/ipv4_outbounds.json)
 
-    echo "${outbounds}" | jq . >${configPath}10_ipv4_outbounds.json
+    echo "${outbounds}" | jq . >${configPath}/ipv4_outbounds.json
 
     echoContent green " ---> 添加成功"
 
@@ -3669,6 +3653,7 @@ EOF
   fi
   reloadCore
 }
+
 # 流媒体工具箱
 streamingToolbox() {
   echoContent skyBlue "\n功能 1/${totalProgress} : 流媒体工具箱"
@@ -3725,19 +3710,19 @@ setDokodemoDoorUnblockNetflixOutbounds() {
     unInstallOutbounds netflix-80
     unInstallOutbounds netflix-443
 
-    outbounds=$(jq -r ".outbounds += [{\"tag\":\"netflix-80\",\"protocol\":\"freedom\",\"settings\":{\"domainStrategy\":\"AsIs\",\"redirect\":\"${setIP}:22387\"}},{\"tag\":\"netflix-443\",\"protocol\":\"freedom\",\"settings\":{\"domainStrategy\":\"AsIs\",\"redirect\":\"${setIP}:22388\"}}]" ${configPath}10_ipv4_outbounds.json)
+    outbounds=$(jq -r ".outbounds += [{\"tag\":\"netflix-80\",\"protocol\":\"freedom\",\"settings\":{\"domainStrategy\":\"AsIs\",\"redirect\":\"${setIP}:22387\"}},{\"tag\":\"netflix-443\",\"protocol\":\"freedom\",\"settings\":{\"domainStrategy\":\"AsIs\",\"redirect\":\"${setIP}:22388\"}}]" ${configPath}/ipv4_outbounds.json)
 
-    echo "${outbounds}" | jq . >${configPath}10_ipv4_outbounds.json
+    echo "${outbounds}" | jq . >${configPath}/ipv4_outbounds.json
 
-    if [[ -f "${configPath}09_routing.json" ]]; then
+    if [[ -f "${configPath}/routing.json" ]]; then
       unInstallRouting netflix-80
       unInstallRouting netflix-443
 
       local routing
-      routing=$(jq -r '.routing.rules += [{"type":"field","port":80,"domain":["ip.sb","geosite:netflix"],"outboundTag":"netflix-80"},{"type":"field","port":443,"domain":["ip.sb","geosite:netflix"],"outboundTag":"netflix-443"}]' ${configPath}09_routing.json)
-      echo "${routing}" | jq . >${configPath}09_routing.json
+      routing=$(jq -r '.routing.rules += [{"type":"field","port":80,"domain":["ip.sb","geosite:netflix"],"outboundTag":"netflix-80"},{"type":"field","port":443,"domain":["ip.sb","geosite:netflix"],"outboundTag":"netflix-443"}]' ${configPath}/routing.json)
+      echo "${routing}" | jq . >${configPath}/routing.json
     else
-      cat <<EOF >${configPath}09_routing.json
+      cat <<EOF >${configPath}/routing.json
 {
   "routing": {
     "domainStrategy": "AsIs",
@@ -3775,7 +3760,6 @@ EOF
 
 # 设置任意门解锁Netflix【入站】
 setDokodemoDoorUnblockNetflixInbounds() {
-
   echoContent skyBlue "\n功能 1/${totalProgress} : 任意门添加入站"
   echoContent red "\n=============================================================="
   echoContent yellow "# 注意事项\n"
@@ -3784,7 +3768,7 @@ setDokodemoDoorUnblockNetflixInbounds() {
   echoContent yellow "录入示例:1.1.1.1,1.1.1.2\n"
   read -r -p "请输入允许访问该解锁Netflix vps的IP:" setIPs
   if [[ -n "${setIPs}" ]]; then
-    cat <<EOF >${configPath}01_netflix_inbounds.json
+    cat <<EOF >${configPath}/netflix_inbounds.json
 {
   "inbounds": [
     {
@@ -3827,7 +3811,7 @@ setDokodemoDoorUnblockNetflixInbounds() {
 }
 EOF
 
-    cat <<EOF >${configPath}10_ipv4_outbounds.json
+    cat <<EOF >${configPath}/ipv4_outbounds.json
 {
     "outbounds":[
         {
@@ -3852,7 +3836,7 @@ EOF
 }
 EOF
 
-    cat <<EOF >${configPath}09_routing.json
+    cat <<EOF >${configPath}/routing.json
 {
   "routing": {
     "rules": [
@@ -3890,8 +3874,8 @@ EOF
     local routing
 
     for value in "${sourceIPs[@]}"; do
-      routing=$(jq -r ".routing.rules[0].source += [\"${value}\"]" ${configPath}09_routing.json)
-      echo "${routing}" | jq . >${configPath}09_routing.json
+      routing=$(jq -r ".routing.rules[0].source += [\"${value}\"]" ${configPath}/routing.json)
+      echo "${routing}" | jq . >${configPath}/routing.json
     done
 
     reloadCore
@@ -3903,12 +3887,11 @@ EOF
 
 # 移除任意门解锁Netflix
 removeDokodemoDoorUnblockNetflix() {
-
   unInstallOutbounds netflix-80
   unInstallOutbounds netflix-443
   unInstallRouting netflix-80
   unInstallRouting netflix-443
-  rm -rf ${configPath}01_netflix_inbounds.json
+  rm -rf ${configPath}/netflix_inbounds.json
 
   reloadCore
   echoContent green " ---> 卸载成功"
@@ -3976,7 +3959,7 @@ dnsUnlockNetflix() {
 setUnlockDNS() {
   read -r -p "请输入解锁Netflix的DNS:" setDNS
   if [[ -n ${setDNS} ]]; then
-    cat <<EOF >${configPath}11_dns.json
+    cat <<EOF >${configPath}/dns.json
 {
   "dns": {
     "servers": [
@@ -4019,7 +4002,7 @@ EOF
 
 # 移除Netflix解锁
 removeUnlockDNS() {
-  cat <<EOF >${configPath}11_dns.json
+  cat <<EOF >${configPath}/dns.json
 {
   "dns": {
     "servers": [
@@ -4242,7 +4225,6 @@ xrayCoreInstall() {
 
 # 核心管理
 coreVersionManageMenu() {
-
   if [[ -z "${coreInstallType}" ]]; then
     echoContent red "\n ---> 没有检测到安装目录，请执行脚本安装内容"
     menu
@@ -4259,6 +4241,7 @@ coreVersionManageMenu() {
     v2rayVersionManageMenu 1
   fi
 }
+
 # 定时任务检查证书
 cronRenewTLS() {
   if [[ "${renewTLS}" == "RenewTLS" ]]; then
@@ -4266,6 +4249,7 @@ cronRenewTLS() {
     exit 0
   fi
 }
+
 # 账号管理
 manageAccount() {
   echoContent skyBlue "\n功能 1/${totalProgress} : 账号管理"
@@ -4302,7 +4286,7 @@ subscribe() {
     mv /etc/proxy/subscribe_tmp/* /etc/proxy/subscribe/
 
     if [[ -n $(ls /etc/proxy/subscribe/) ]]; then
-      find /etc/proxy/subscribe | while read -r email; do
+      find /etc/proxy/subscribe -mindepth 1 | while read -r email; do
         email=$(echo "${email}" | awk -F "[s][u][b][s][c][r][i][b][e][/]" '{print $2}')
         local base64Result
         base64Result=$(base64 -w 0 "/etc/proxy/subscribe/${email}")
@@ -4349,13 +4333,13 @@ switchAlpn() {
   if [[ "${selectSwitchAlpnType}" == "1" && "${currentAlpn}" == "http/1.1" ]]; then
 
     local frontingTypeJSON
-    frontingTypeJSON=$(jq -r ".inbounds[0].streamSettings.xtlsSettings.alpn = [\"h2\",\"http/1.1\"]" ${configPath}${frontingType}.json)
-    echo "${frontingTypeJSON}" | jq . >${configPath}${frontingType}.json
+    frontingTypeJSON=$(jq -r ".inbounds[0].streamSettings.xtlsSettings.alpn = [\"h2\",\"http/1.1\"]" ${configPath}/${frontingType}.json)
+    echo "${frontingTypeJSON}" | jq . >${configPath}/${frontingType}.json
 
   elif [[ "${selectSwitchAlpnType}" == "1" && "${currentAlpn}" == "h2" ]]; then
     local frontingTypeJSON
-    frontingTypeJSON=$(jq -r ".inbounds[0].streamSettings.xtlsSettings.alpn =[\"http/1.1\",\"h2\"]" ${configPath}${frontingType}.json)
-    echo "${frontingTypeJSON}" | jq . >${configPath}${frontingType}.json
+    frontingTypeJSON=$(jq -r ".inbounds[0].streamSettings.xtlsSettings.alpn =[\"http/1.1\",\"h2\"]" ${configPath}/${frontingType}.json)
+    echo "${frontingTypeJSON}" | jq . >${configPath}/${frontingType}.json
   else
     echoContent red " ---> 选择错误"
     exit 0
@@ -4369,6 +4353,7 @@ menu() {
   echoContent red "\n=============================================================="
   echoContent green "作者：Gan Nan"
   echoContent green "当前版本：v1.0"
+  echoContent red "==============================================================\n"
   showInstallStatus
   echoContent red "\n=============================================================="
   if [[ -n "${coreInstallType}" ]]; then
